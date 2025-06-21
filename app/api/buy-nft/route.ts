@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     const buyer = new PublicKey(buyerAddress);
 
     const endpoint =
-      process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
+      process.env.SOLANA_RPC_URL || "https://api-mainnet.magiceden.dev/v2";
     const connection = new Connection(endpoint, "confirmed");
     const bearerToken = process.env.MAGIC_EDEN_API_KEY;
 

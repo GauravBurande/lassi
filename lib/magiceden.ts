@@ -129,46 +129,120 @@ export class MagicEdenAPI {
     }
   }
 
-  async buyNFT(mintAddress: string, price: number, buyerPublicKey: string) {
+  async buyNFT(
+    mintAddress: string,
+    price: number,
+    buyerPublicKey: string,
+    connection: any
+  ) {
     try {
       // 1. Fetch listing info for the mint
       const listingsResp = await axios.get(
         `https://api-mainnet.magiceden.dev/v2/tokens/${mintAddress}/listings`
       );
-
-      console.log("listing res", listingsResp);
       const listings = listingsResp.data;
       if (!Array.isArray(listings) || listings.length === 0) {
         throw new Error("No active listings found for this NFT");
       }
-      // Use the first listing (lowest price, most recent, etc.)
       const listing = listings[0];
 
       // 2. Construct the buy instruction payload using listing info
-      // Prepare query params for GET request
-      const params = {
+      const params: any = {
         buyer: buyerPublicKey,
         seller: listing.seller,
-        tokenMint: listing.tokenMint,
-        tokenATA: listing.tokenAddress,
-        price: listing.price,
         auctionHouseAddress: listing.auctionHouse,
-        sellerReferral: listing.sellerReferral || "",
-        sellerExpiry: listing.expiry ?? 0,
-        // Optionally: pdaAddress: listing.pdaAddress,
+        tokenMint: mintAddress,
+        tokenATA: listing.tokenAddress,
+        price: listing.price.toString(),
       };
+      if (listing.expiry !== undefined && listing.expiry !== 0) {
+        params.sellerExpiry = listing.expiry;
+      }
 
-      const response = await axios.get(
+      const buyIxResponse = await axios.get(
         `${MAGIC_EDEN_API_BASE}/instructions/buy_now`,
         {
-          params,
           headers: {
-            Authorization: `Bearer ${process.env.MAGIC_EDEN_API_KEY}`,
+            Authorization: `Bearer 0717815d-e286-4d15-bf7c-68b07901c858`,
+            Accept: "application/json",
           },
+          params: params,
         }
       );
-      console.log(response.data);
-      return response.data;
+
+      if (!buyIxResponse.data?.txSigned?.data) {
+        throw new Error(
+          "Magic Eden buy_now did not return a signed transaction component (txSigned.data missing)."
+        );
+      }
+
+      // 3. Deserialize the transaction and handle address lookup tables
+      const {
+        VersionedTransaction,
+        TransactionMessage,
+        AddressLookupTableAccount,
+        PublicKey,
+      } = await import("@solana/web3.js");
+      const meSignedTxData = new Uint8Array(
+        Buffer.from(buyIxResponse.data.txSigned.data, "base64")
+      );
+      const meTransaction = VersionedTransaction.deserialize(meSignedTxData);
+      const meMessage = meTransaction.message;
+
+      let addressLookupTableAccounts: any[] = [];
+      if (meMessage.addressTableLookups.length > 0) {
+        const lookupTableKeys = meMessage.addressTableLookups.map(
+          (lookup: any) => lookup.accountKey.toBase58()
+        );
+        // Helper to fetch lookup table accounts
+        const getAddressLookupTableAccounts = async (
+          keys: string[],
+          connection: any
+        ) => {
+          const addressLookupTableAccountInfos =
+            await connection.getMultipleAccountsInfo(
+              keys.map((key) => new PublicKey(key))
+            );
+          return addressLookupTableAccountInfos.reduce(
+            (acc: any[], accountInfo: any, index: number) => {
+              const addressLookupTableAddress = keys[index];
+              if (accountInfo) {
+                const addressLookupTableAccount = new AddressLookupTableAccount(
+                  {
+                    key: new PublicKey(addressLookupTableAddress),
+                    state: AddressLookupTableAccount.deserialize(
+                      new Uint8Array(accountInfo.data)
+                    ),
+                  }
+                );
+                acc.push(addressLookupTableAccount);
+              }
+              return acc;
+            },
+            []
+          );
+        };
+        addressLookupTableAccounts = await getAddressLookupTableAccounts(
+          lookupTableKeys,
+          connection
+        );
+      }
+
+      // 4. Decompile and recompile the transaction with a fresh blockhash
+      const decompiledInstructions = TransactionMessage.decompile(meMessage, {
+        addressLookupTableAccounts: addressLookupTableAccounts,
+      }).instructions;
+      const { blockhash } = await connection.getLatestBlockhash();
+      const finalMessage = new TransactionMessage({
+        payerKey: new PublicKey(buyerPublicKey),
+        recentBlockhash: blockhash,
+        instructions: decompiledInstructions,
+      }).compileToV0Message(addressLookupTableAccounts);
+      const finalTransaction = new VersionedTransaction(finalMessage);
+      const base64Transaction = Buffer.from(
+        finalTransaction.serialize()
+      ).toString("base64");
+      return { transaction: base64Transaction };
     } catch (error: any) {
       if (
         error?.message?.includes("No active listings found for this NFT") ||
@@ -176,15 +250,12 @@ export class MagicEdenAPI {
           "No active listings found for this NFT"
         )
       ) {
-        // Show toast if available in global window (for SSR safety)
         if (typeof window !== "undefined" && (window as any).toast) {
           (window as any).toast.error("No active listings found for this NFT");
         }
-        console.error("Error creating buy instruction:", error);
         throw new Error("No active listings found for this NFT");
       } else {
-        console.error("Error creating buy instruction:", error);
-        throw new Error("Failed to create buy instruction");
+        throw new Error(error?.message || "Failed to create buy instruction");
       }
     }
   }

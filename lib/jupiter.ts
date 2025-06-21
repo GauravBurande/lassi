@@ -44,7 +44,7 @@ export class JupiterAPI {
   private connection: Connection;
 
   private constructor() {
-    this.connection = new Connection("https://api.mainnet-beta.solana.com");
+    this.connection = new Connection("https://api-mainnet.magiceden.dev/v2");
   }
 
   public static getInstance(): JupiterAPI {

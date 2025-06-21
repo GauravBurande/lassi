@@ -148,30 +148,25 @@ export function NFTCard({ nft }: NFTCardProps) {
   }) => {
     toast.info("Purchasing NFT from Magic Eden...");
     console.info("Purchasing NFT from Magic Eden...");
+    // Use mainnet-beta endpoint for transaction
+    const connection = new Connection("https://api-mainnet.magiceden.dev/v2");
     const buyInstruction = await magicEdenAPI.buyNFT(
       mintAddress,
       price,
-      publicKey.toString()
+      publicKey.toString(),
+      connection
     );
 
-    // Real implementation: execute the buy instruction
-    // buyInstruction is expected to have a base64 transaction string (legacy or versioned)
-    let txBase64 =
-      buyInstruction.transaction ||
-      buyInstruction.tx ||
-      buyInstruction.data ||
-      buyInstruction;
+    // buyInstruction is expected to have a base64 transaction string
+    const txBase64 = buyInstruction.transaction;
     if (!txBase64) throw new Error("No transaction returned from Magic Eden");
 
-    // Try both VersionedTransaction and Transaction deserialization
+    // Only VersionedTransaction is expected now
     let transaction;
     try {
       const txBuf = Uint8Array.from(Buffer.from(txBase64, "base64"));
-      try {
-        transaction = VersionedTransaction.deserialize(txBuf);
-      } catch (e) {
-        transaction = Transaction.from(txBuf);
-      }
+      const { VersionedTransaction } = await import("@solana/web3.js");
+      transaction = VersionedTransaction.deserialize(txBuf);
     } catch (e) {
       throw new Error("Failed to deserialize Magic Eden transaction");
     }
@@ -179,7 +174,6 @@ export function NFTCard({ nft }: NFTCardProps) {
     // Sign with wallet
     const signedTx = await signTransaction(transaction);
     // Send and confirm
-    const connection = new Connection("https://api-mainnet.magiceden.dev/v2");
     const txid = await connection.sendRawTransaction(signedTx.serialize(), {
       skipPreflight: false,
       preflightCommitment: "confirmed",
