@@ -158,7 +158,7 @@ export function NFTCard({ nft }: NFTCardProps) {
     );
 
     // buyInstruction is expected to have a base64 transaction string
-    const txBase64 = buyInstruction.transaction;
+    const txBase64 = buyInstruction?.transaction;
     if (!txBase64) throw new Error("No transaction returned from Magic Eden");
 
     // Only VersionedTransaction is expected now

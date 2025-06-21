@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "sonner";
 
 const MAGIC_EDEN_API_BASE = "https://api-mainnet.magiceden.dev/v2";
 
@@ -147,6 +148,11 @@ export class MagicEdenAPI {
       const listing = listings[0];
 
       // 2. Construct the buy instruction payload using listing info
+      console.log("auctionhouser", listing.auctionHouse);
+      if (!listing.auctionHouse) {
+        toast.error("You can't buy this one, it doesn't has auction house!");
+        return;
+      }
       const params: any = {
         buyer: buyerPublicKey,
         seller: listing.seller,
