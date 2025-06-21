@@ -20,7 +20,7 @@ export function SearchResults({ results, searchQuery }: SearchResultsProps) {
             Search Results
             {searchQuery && (
               <span className="text-sm font-normal text-gray-300">
-                for "{searchQuery}"
+                for &quot;{searchQuery}&quot;
               </span>
             )}
           </CardTitle>
@@ -49,9 +49,12 @@ export function SearchResults({ results, searchQuery }: SearchResultsProps) {
             </p>
             <div className="mt-4 text-sm text-gray-400 text-center">
               <p>Search tips:</p>
-              <p>• Use collection names like "DeGods" or "y00ts"</p>
+              {/* <p>
+                • Use collection names like &quot;DeGods&quot; or
+                &quot;y00ts&quot;
+              </p> */}
               <p>• Enter a specific mint address (44 characters)</p>
-              <p>• Try popular collection symbols</p>
+              <p>• Try popular nft&apos;s mit address</p>
             </div>
           </CardContent>
         </Card>

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import {
+  WalletDisconnectButton,
+  WalletMultiButton,
+} from "@solana/wallet-adapter-react-ui";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -51,7 +54,6 @@ export default function Home() {
             20
           );
           setSearchResults(listings);
-          console.log(listings);
           setActiveTab("search");
           toast.success(
             `Found ${listings.length} listings in ${collections[0].name}`
@@ -88,7 +90,11 @@ export default function Home() {
             </span>
           </div>
           <span className="hidden md:block text-gray-400 text-base font-medium">
-            Buy Solana NFTs with USDC
+            {publicKey ? (
+              <WalletDisconnectButton />
+            ) : (
+              "Buy Solana NFTs with USDC"
+            )}
           </span>
         </div>
       </header>
@@ -106,7 +112,7 @@ export default function Home() {
               <p className="text-gray-300 mb-6">
                 Connect your Solana wallet to start buying NFTs with USDC
               </p>
-              <WalletMultiButton className="!bg-gradient-to-r !from-green-600 !to-white-600 hover:!from-green-700 hover:!to-white-700 !w-full" />
+              <WalletMultiButton className="bg-green-500 !w-full" />
             </CardContent>
           </Card>
         ) : (
@@ -131,7 +137,7 @@ export default function Home() {
                   <Button
                     onClick={handleSearch}
                     disabled={isSearching}
-                    className="bg-gradient-to-r from-green-600 to-white-600 hover:from-green-700 hover:to-white-700"
+                    className="bg-green-700"
                   >
                     {isSearching ? "Searching..." : "Search"}
                   </Button>
