@@ -11,6 +11,7 @@ interface SearchResultsProps {
 }
 
 export function SearchResults({ results, searchQuery }: SearchResultsProps) {
+  console.log(results[0]);
   return (
     <div>
       <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">

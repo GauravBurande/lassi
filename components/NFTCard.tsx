@@ -38,10 +38,12 @@ export function NFTCard({ nft }: NFTCardProps) {
     "Transaction confirmed",
   ];
 
-  const token = nft || {};
+  const token = nft.token || {};
   const image =
     nft.extra?.img ||
     token.image ||
+    nft.properties?.files?.[0]?.uri ||
+    nft.properties?.files?.[1]?.uri ||
     token.properties?.files?.[0]?.uri ||
     token.properties?.files?.[1]?.uri ||
     "https://images.pexels.com/photos/6985003/pexels-photo-6985003.jpeg";
@@ -49,12 +51,13 @@ export function NFTCard({ nft }: NFTCardProps) {
   const collectionName =
     token.collectionName ||
     token.collection ||
-    nft.token.collectionName ||
-    nft.token.collection ||
+    nft.collectionName ||
+    nft.collection ||
     "Unknown";
   const price = nft.price ?? token.price ?? 0;
   const attributes = token.attributes || [];
   const mintAddress = token.mintAddress || nft.tokenMint || nft.mintAddress;
+  const seller = nft.owner || token.owner;
   const rarity =
     nft.rarity?.howrare?.rank ||
     nft.rarity?.moonrank?.rank ||
@@ -83,16 +86,17 @@ export function NFTCard({ nft }: NFTCardProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [price]);
 
+  if (!signTransaction) {
+    throw new Error("no public key sherlock!");
+  }
   // Helper function to perform the USDC -> SOL swap via Jupiter
   const swapUsdcToSol = async ({
     usdcAmount,
     publicKey,
-    signTransaction,
     setPurchaseStep,
   }: {
     usdcAmount: number;
     publicKey: any;
-    signTransaction: any;
     setPurchaseStep: (step: number) => void;
   }) => {
     toast.info("Getting swap transaction from Jupiter...");
@@ -137,16 +141,10 @@ export function NFTCard({ nft }: NFTCardProps) {
     mintAddress,
     price,
     publicKey,
-    signTransaction,
-    setPurchaseStep,
-    name,
   }: {
     mintAddress: string;
     price: number;
     publicKey: any;
-    signTransaction: any;
-    setPurchaseStep: (step: number) => void;
-    name: string;
   }) => {
     toast.info("Purchasing NFT from Magic Eden...");
     console.info("Purchasing NFT from Magic Eden...");
@@ -207,39 +205,38 @@ export function NFTCard({ nft }: NFTCardProps) {
     setPurchaseStep(0);
 
     try {
+      // todo: uncomment
       // Step 1: Get current SOL price
-      toast.info("Getting current SOL price...");
-      console.info("Getting current SOL price...");
-      const solPrice = await jupiterAPI.getSolPrice();
-      setUsdcPrice(price * solPrice);
-      console.log("solPrice", solPrice);
-      setPurchaseStep(1);
+      // toast.info("Getting current SOL price...");
+      // console.info("Getting current SOL price...");
+      // const solPrice = await jupiterAPI.getSolPrice();
+      // setUsdcPrice(price * solPrice);
+      // console.log("solPrice", solPrice);
+      // setPurchaseStep(1);
 
-      // Step 2: Calculate USDC needed
-      toast.info("Calculating USDC required...");
-      console.info("Calculating USDC required...");
-      const usdcNeeded = price * solPrice * 1.02; // Add 2% buffer for slippage
-      console.log("usdcNeeded", usdcNeeded);
-      setUsdcRequired(usdcNeeded);
-      setPurchaseStep(2);
+      // // Step 2: Calculate USDC needed
+      // toast.info("Calculating USDC required...");
+      // console.info("Calculating USDC required...");
+      // const usdcNeeded = price * solPrice * 1.02; // Add 2% buffer for slippage
+      // console.log("usdcNeeded", usdcNeeded);
+      // setUsdcRequired(usdcNeeded);
+      // setPurchaseStep(2);
 
-      // Step 3 & 4: Swap USDC to SOL
-      const usdcAmount = Math.floor(usdcNeeded * 1e6); // USDC has 6 decimals
-      await swapUsdcToSol({
-        usdcAmount,
-        publicKey,
-        signTransaction,
-        setPurchaseStep,
-      });
+      // // Step 3 & 4: Swap USDC to SOL
+      // const usdcAmount = Math.floor(usdcNeeded * 1e6); // USDC has 6 decimals
+      // await swapUsdcToSol({
+      //   usdcAmount,
+      //   publicKey,
+      //   signTransaction,
+      //   setPurchaseStep,
+      // });
 
       // Step 5 & 6: Buy NFT from Magic Eden
+
       await buyNftFromMagicEden({
         mintAddress,
         price,
         publicKey,
-        signTransaction,
-        setPurchaseStep,
-        name,
       });
     } catch (error: any) {
       console.error("Purchase error:", error);
