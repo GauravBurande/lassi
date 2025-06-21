@@ -229,16 +229,16 @@ export class MagicEdenAPI {
       }
 
       // 4. Decompile and recompile the transaction with a fresh blockhash
-      const decompiledInstructions = TransactionMessage.decompile(meMessage, {
-        addressLookupTableAccounts: addressLookupTableAccounts,
-      }).instructions;
-      const { blockhash } = await connection.getLatestBlockhash();
-      const finalMessage = new TransactionMessage({
-        payerKey: new PublicKey(buyerPublicKey),
-        recentBlockhash: blockhash,
-        instructions: decompiledInstructions,
-      }).compileToV0Message(addressLookupTableAccounts);
-      const finalTransaction = new VersionedTransaction(finalMessage);
+      // const decompiledInstructions = TransactionMessage.decompile(meMessage, {
+      //   addressLookupTableAccounts: addressLookupTableAccounts,
+      // }).instructions;
+      // // const { blockhash } = await connection.getLatestBlockhash();
+      // const finalMessage = new TransactionMessage({
+      //   payerKey: new PublicKey(buyerPublicKey),
+      //   recentBlockhash: blockhash,
+      //   instructions: decompiledInstructions,
+      // }).compileToV0Message(addressLookupTableAccounts);
+      const finalTransaction = new VersionedTransaction(meMessage);
       const base64Transaction = Buffer.from(
         finalTransaction.serialize()
       ).toString("base64");
