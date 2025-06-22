@@ -1,3 +1,4 @@
+import { VersionedTransaction } from "@solana/web3.js";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -169,7 +170,7 @@ export class MagicEdenAPI {
         `${MAGIC_EDEN_API_BASE}/instructions/buy_now`,
         {
           headers: {
-            Authorization: `Bearer 0717815d-e286-4d15-bf7c-68b07901c858`,
+            Authorization: `Bearer ${process.env.MAGIC_EDEN_API_KEY}`,
             Accept: "application/json",
           },
           params: params,
@@ -182,68 +183,12 @@ export class MagicEdenAPI {
         );
       }
 
-      // 3. Deserialize the transaction and handle address lookup tables
-      const {
-        VersionedTransaction,
-        TransactionMessage,
-        AddressLookupTableAccount,
-        PublicKey,
-      } = await import("@solana/web3.js");
       const meSignedTxData = new Uint8Array(
         Buffer.from(buyIxResponse.data.txSigned.data, "base64")
       );
       const meTransaction = VersionedTransaction.deserialize(meSignedTxData);
       const meMessage = meTransaction.message;
 
-      let addressLookupTableAccounts: any[] = [];
-      if (meMessage.addressTableLookups.length > 0) {
-        const lookupTableKeys = meMessage.addressTableLookups.map(
-          (lookup: any) => lookup.accountKey.toBase58()
-        );
-        // Helper to fetch lookup table accounts
-        const getAddressLookupTableAccounts = async (
-          keys: string[],
-          connection: any
-        ) => {
-          const addressLookupTableAccountInfos =
-            await connection.getMultipleAccountsInfo(
-              keys.map((key) => new PublicKey(key))
-            );
-          return addressLookupTableAccountInfos.reduce(
-            (acc: any[], accountInfo: any, index: number) => {
-              const addressLookupTableAddress = keys[index];
-              if (accountInfo) {
-                const addressLookupTableAccount = new AddressLookupTableAccount(
-                  {
-                    key: new PublicKey(addressLookupTableAddress),
-                    state: AddressLookupTableAccount.deserialize(
-                      new Uint8Array(accountInfo.data)
-                    ),
-                  }
-                );
-                acc.push(addressLookupTableAccount);
-              }
-              return acc;
-            },
-            []
-          );
-        };
-        addressLookupTableAccounts = await getAddressLookupTableAccounts(
-          lookupTableKeys,
-          connection
-        );
-      }
-
-      // 4. Decompile and recompile the transaction with a fresh blockhash
-      // const decompiledInstructions = TransactionMessage.decompile(meMessage, {
-      //   addressLookupTableAccounts: addressLookupTableAccounts,
-      // }).instructions;
-      // // const { blockhash } = await connection.getLatestBlockhash();
-      // const finalMessage = new TransactionMessage({
-      //   payerKey: new PublicKey(buyerPublicKey),
-      //   recentBlockhash: blockhash,
-      //   instructions: decompiledInstructions,
-      // }).compileToV0Message(addressLookupTableAccounts);
       const finalTransaction = new VersionedTransaction(meMessage);
       const base64Transaction = Buffer.from(
         finalTransaction.serialize()
@@ -256,9 +201,7 @@ export class MagicEdenAPI {
           "No active listings found for this NFT"
         )
       ) {
-        if (typeof window !== "undefined" && (window as any).toast) {
-          (window as any).toast.error("No active listings found for this NFT");
-        }
+        toast.error("No active listings found for this NFT");
         throw new Error("No active listings found for this NFT");
       } else {
         throw new Error(error?.message || "Failed to create buy instruction");
