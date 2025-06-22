@@ -152,6 +152,7 @@ export class MagicEdenAPI {
       console.log("auctionhouser", listing.auctionHouse);
       if (!listing.auctionHouse) {
         toast.error("You can't buy this one, it doesn't has auction house!");
+        console.log("auction error");
         return;
       }
       const params: any = {
@@ -170,7 +171,7 @@ export class MagicEdenAPI {
         `${MAGIC_EDEN_API_BASE}/instructions/buy_now`,
         {
           headers: {
-            Authorization: `Bearer ${process.env.MAGIC_EDEN_API_KEY}`,
+            Authorization: `Bearer 0717815d-e286-4d15-bf7c-68b07901c858`,
             Accept: "application/json",
           },
           params: params,

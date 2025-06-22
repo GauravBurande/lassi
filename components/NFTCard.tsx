@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { magicEdenAPI } from "@/lib/magiceden";
 import { jupiterAPI, TOKEN_ADDRESSES } from "@/lib/jupiter";
 import Image from "next/image";
-import { Connection } from "@solana/web3.js";
+import { Connection, VersionedTransaction } from "@solana/web3.js";
 
 interface NFTCardProps {
   nft: any; // Accept any, as schema is more complex than MagicEdenNFT
@@ -165,7 +165,6 @@ export function NFTCard({ nft }: NFTCardProps) {
     let transaction;
     try {
       const txBuf = Uint8Array.from(Buffer.from(txBase64, "base64"));
-      const { VersionedTransaction } = await import("@solana/web3.js");
       transaction = VersionedTransaction.deserialize(txBuf);
     } catch (e) {
       throw new Error("Failed to deserialize Magic Eden transaction");
@@ -201,28 +200,29 @@ export function NFTCard({ nft }: NFTCardProps) {
     try {
       // todo: uncomment
       // Step 1: Get current SOL price
-      toast.info("Getting current SOL price...");
-      console.info("Getting current SOL price...");
-      const solPrice = await jupiterAPI.getSolPrice();
-      setUsdcPrice(price * solPrice);
-      console.log("solPrice", solPrice);
-      setPurchaseStep(1);
+      // toast.info("Getting current SOL price...");
+      // console.info("Getting current SOL price...");
+      // const solPrice = await jupiterAPI.getSolPrice();
+      // setUsdcPrice(price * solPrice);
+      // console.log("solPrice", solPrice);
+      // setPurchaseStep(1);
 
-      // Step 2: Calculate USDC needed
-      toast.info("Calculating USDC required...");
-      console.info("Calculating USDC required...");
-      const usdcNeeded = price * solPrice * 1.02; // Add 2% buffer for slippage
-      console.log("usdcNeeded", usdcNeeded);
-      setUsdcRequired(usdcNeeded);
-      setPurchaseStep(2);
+      // // Step 2: Calculate USDC needed
+      // toast.info("Calculating USDC required...");
+      // console.info("Calculating USDC required...");
+      // const usdcNeeded = price * solPrice * 1.02; // Add 2% buffer for slippage
+      // console.log("usdcNeeded", usdcNeeded);
+      // setUsdcRequired(usdcNeeded);
+      // setPurchaseStep(2);
 
-      // Step 3 & 4: Swap USDC to SOL
-      const usdcAmount = Math.floor(usdcNeeded * 1e6); // USDC has 6 decimals
-      await swapUsdcToSol({
-        usdcAmount,
-        publicKey,
-        setPurchaseStep,
-      });
+      // // Step 3 & 4: Swap USDC to SOL
+      // const usdcAmount = Math.floor(usdcNeeded * 1e6); // USDC has 6 decimals
+      // await swapUsdcToSol({
+      //   usdcAmount,
+      //   publicKey,
+      //   signTransaction,
+      //   setPurchaseStep,
+      // });
 
       // Step 5 & 6: Buy NFT from Magic Eden
 

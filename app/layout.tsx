@@ -1,11 +1,11 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Syne as Inter } from "next/font/google";
+import { Syne } from "next/font/google";
 import { WalletContextProvider } from "@/components/WalletContextProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Syne({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Lassi",
