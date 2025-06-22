@@ -57,7 +57,6 @@ export function NFTCard({ nft }: NFTCardProps) {
   const price = nft.price ?? token.price ?? 0;
   const attributes = token.attributes || [];
   const mintAddress = token.mintAddress || nft.tokenMint || nft.mintAddress;
-  const seller = nft.owner || token.owner;
   const rarity =
     nft.rarity?.howrare?.rank ||
     nft.rarity?.moonrank?.rank ||

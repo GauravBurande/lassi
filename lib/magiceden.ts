@@ -31,7 +31,7 @@ export interface MagicEdenCollection {
 
 export class MagicEdenAPI {
   private static instance: MagicEdenAPI;
-  private apiKey: string | null = null;
+  private apiKey: string | null = "0717815d-e286-4d15-bf7c-68b07901c858";
 
   private constructor() {}
 
