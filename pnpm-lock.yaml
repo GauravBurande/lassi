@@ -129,7 +129,7 @@ importers:
         specifier: 10.4.15
         version: 10.4.15(postcss@8.4.30)
       axios:
-        specifier: ^1.6.0
+        specifier: ^1.10.0
         version: 1.10.0
       bn.js:
         specifier: ^5.2.1
