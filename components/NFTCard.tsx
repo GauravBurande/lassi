@@ -200,29 +200,28 @@ export function NFTCard({ nft }: NFTCardProps) {
     try {
       // todo: uncomment
       // Step 1: Get current SOL price
-      // toast.info("Getting current SOL price...");
-      // console.info("Getting current SOL price...");
-      // const solPrice = await jupiterAPI.getSolPrice();
-      // setUsdcPrice(price * solPrice);
-      // console.log("solPrice", solPrice);
-      // setPurchaseStep(1);
+      toast.info("Getting current SOL price...");
+      console.info("Getting current SOL price...");
+      const solPrice = await jupiterAPI.getSolPrice();
+      setUsdcPrice(price * solPrice);
+      console.log("solPrice", solPrice);
+      setPurchaseStep(1);
 
-      // // Step 2: Calculate USDC needed
-      // toast.info("Calculating USDC required...");
-      // console.info("Calculating USDC required...");
-      // const usdcNeeded = price * solPrice * 1.02; // Add 2% buffer for slippage
-      // console.log("usdcNeeded", usdcNeeded);
-      // setUsdcRequired(usdcNeeded);
-      // setPurchaseStep(2);
+      // Step 2: Calculate USDC needed
+      toast.info("Calculating USDC required...");
+      console.info("Calculating USDC required...");
+      const usdcNeeded = price * solPrice * 1.02; // Add 2% buffer for slippage
+      console.log("usdcNeeded", usdcNeeded);
+      setUsdcRequired(usdcNeeded);
+      setPurchaseStep(2);
 
-      // // Step 3 & 4: Swap USDC to SOL
-      // const usdcAmount = Math.floor(usdcNeeded * 1e6); // USDC has 6 decimals
-      // await swapUsdcToSol({
-      //   usdcAmount,
-      //   publicKey,
-      //   signTransaction,
-      //   setPurchaseStep,
-      // });
+      // Step 3 & 4: Swap USDC to SOL
+      const usdcAmount = Math.floor(usdcNeeded * 1e6); // USDC has 6 decimals
+      await swapUsdcToSol({
+        usdcAmount,
+        publicKey,
+        setPurchaseStep,
+      });
 
       // Step 5 & 6: Buy NFT from Magic Eden
 
