@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { NFTCard } from "./NFTCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,12 +14,15 @@ export function FeaturedNFTs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Use a module-level variable to cache the featured NFTs
-  // This will persist across tab switches and component unmounts within the same session
-  let featuredNFTsCache: MagicEdenNFT[] | null = null;
+  const featuredNFTsCache = useRef<MagicEdenNFT[] | null>(null);
+
+  // The use of isMounted is a legacy pattern to avoid setting state on unmounted components,
+  // but in modern React, it's better to use AbortController or simply ignore setState after unmount.
+  // Here, we can use a flag with a ref, or just ignore the warning since React batches state updates.
+  // For clarity and safety, let's use an AbortController pattern:
 
   useEffect(() => {
-    let isMounted = true;
+    const abortController = new AbortController();
 
     const fetchFeaturedNFTs = async () => {
       try {
@@ -27,11 +30,9 @@ export function FeaturedNFTs() {
         setError(null);
 
         // Check if we already have cached NFTs
-        if (featuredNFTsCache && featuredNFTsCache.length > 0) {
-          if (isMounted) {
-            setNfts(featuredNFTsCache);
-            setLoading(false);
-          }
+        if (featuredNFTsCache.current && featuredNFTsCache.current.length > 0) {
+          setNfts(featuredNFTsCache.current);
+          setLoading(false);
           return;
         }
 
@@ -41,33 +42,31 @@ export function FeaturedNFTs() {
           18
         );
 
+        if (abortController.signal.aborted) return;
+
         if (!madLadsListings || madLadsListings.length === 0) {
-          if (isMounted) setError("No Mad Lads listings found");
+          setError("No Mad Lads listings found");
           return;
         }
 
         // Cache the NFTs for future renders
-        featuredNFTsCache = madLadsListings.slice(0, 18);
+        featuredNFTsCache.current = madLadsListings.slice(0, 18);
 
-        if (isMounted) {
-          setNfts(featuredNFTsCache);
-          // Optionally: console.log(featuredNFTsCache[0]);
-        }
+        setNfts(featuredNFTsCache.current);
+        // Optionally: console.log(featuredNFTsCache[0]);
       } catch (error) {
         console.error("Error fetching Mad Lads NFTs:", error);
-        if (isMounted) {
-          setError("Failed to load featured NFTs. Please try again later.");
-          toast.error("Failed to load featured NFTs");
-        }
+        setError("Failed to load featured NFTs. Please try again later.");
+        toast.error("Failed to load featured NFTs");
       } finally {
-        if (isMounted) setLoading(false);
+        if (!abortController.signal.aborted) setLoading(false);
       }
     };
 
     fetchFeaturedNFTs();
 
     return () => {
-      isMounted = false;
+      abortController.abort();
     };
   }, []);
 
